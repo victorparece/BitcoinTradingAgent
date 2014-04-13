@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 public class CompletedOrder extends Order
 {
     private DateTime executionDateTime;
+    private Boolean handled = false; //Bit indicating if the order has been handled. For use in Strategy class
 
     public CompletedOrder(DateTime executionDateTime, OrderType orderType, double price, double volume)
     {
@@ -20,6 +21,16 @@ public class CompletedOrder extends Order
     public DateTime GetExecutionDateTime()
     {
         return executionDateTime;
+    }
+
+    public void SetHandled()
+    {
+        handled = true;
+    }
+
+    public Boolean IsHandled()
+    {
+        return handled;
     }
 
 }

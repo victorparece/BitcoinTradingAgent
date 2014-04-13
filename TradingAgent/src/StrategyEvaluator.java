@@ -3,7 +3,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import javax.print.attribute.standard.DateTimeAtCompleted;
 import java.util.ArrayList;
 
 /**
@@ -11,33 +10,37 @@ import java.util.ArrayList;
  */
 public class StrategyEvaluator
 {
-//    private Strategy strategy;
+    private ArrayList<Strategy> strategies = new ArrayList<Strategy>();
 
-//    public StrategyEvaluator(Strategy strategy)
-//    {
-//        this.strategy = strategy;
-//    }
+    private static String DATA_FILE = "data/btceUSD.csv";
+    private static DateTimeFormatter DATETIME_FORMATTER = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+
+    public StrategyEvaluator(DateTime currentDateTime, DateTime endDateTime)
+    {
+        //Initialize strategies
+        //TODO: market simulated should probably be copied to improve performance
+        //strategies.add(new Strategy_MarketOrder(new MarketSimulator(DATA_FILE, currentDateTime, endDateTime)));
+        strategies.add(new Strategy_SubmitAndLeave(new MarketSimulator(DATA_FILE, currentDateTime, endDateTime)));
+    }
+
+    public ArrayList<Strategy> StartEvaluation()
+    {
+        //Evaluate all strategies
+        for (Strategy strategy : strategies)
+            strategy.Evaluate();
+
+        return strategies;
+    }
 
     public static void main(String[ ] args)
     {
-        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
-        DateTime currentDateTime = new DateTime(formatter.parseDateTime("01/01/2012 12:00:00"), DateTimeZone.UTC);
-        DateTime endDateTime = new DateTime(formatter.parseDateTime("01/05/2012 12:00:00"), DateTimeZone.UTC);
+        DateTime currentDateTime = new DateTime(DATETIME_FORMATTER.parseDateTime("01/01/2012 12:00:00"), DateTimeZone.UTC);
+        DateTime endDateTime = new DateTime(DATETIME_FORMATTER.parseDateTime("01/05/2012 12:00:00"), DateTimeZone.UTC);
 
-        MarketSimulator marketSimulator = new MarketSimulator("data/btceUSD.csv", currentDateTime, endDateTime);
+        StrategyEvaluator strategyEvaluator = new StrategyEvaluator(currentDateTime, endDateTime);
+        ArrayList<Strategy> strategies = strategyEvaluator.StartEvaluation();
 
-        ArrayList<Order> submittedOrders = new ArrayList<Order>();
-
-        //Loop until end date is reached
-        while (currentDateTime.isBefore(endDateTime))
-        {
-            submittedOrders.add(marketSimulator.SubmitMarketOrder(currentDateTime, Order.OrderType.Buy, 4.0));
-            submittedOrders.add(marketSimulator.SubmitLimitOrder(currentDateTime, Order.OrderType.Sell, 4.935, 4.0));
-            submittedOrders.add(marketSimulator.SubmitLimitOrder(currentDateTime.plusSeconds(5), Order.OrderType.Buy, 5.30, 4.0));
-            submittedOrders.add(marketSimulator.SubmitLimitOrder(currentDateTime.plusSeconds(15), Order.OrderType.Sell, 5.30, 4.0));
-
-            currentDateTime = currentDateTime.plusMinutes(15);
-            marketSimulator.UpdateMarketState(currentDateTime);
-        }
+        //TODO: Loop through evaluations and print results
     }
+
 }

@@ -35,6 +35,11 @@ public abstract class Order
         return volume - filledQuantity;
     }
 
+    public double GetFilledQuantity()
+    {
+        return filledQuantity;
+    }
+
     public void UpdateRemainingQuantity(double remainingQuantity)
     {
         filledQuantity = volume - remainingQuantity;

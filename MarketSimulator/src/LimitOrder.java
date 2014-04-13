@@ -1,3 +1,4 @@
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -27,14 +28,14 @@ public class LimitOrder extends Order implements Comparable<LimitOrder>
         return submittedDateTime;
     }
 
-    public boolean IsOrderCompleted()
-    {
-        return !completedOrders.isEmpty();
-    }
-
     public void AddCompletedOrder(CompletedOrder co, double quantityUsed)
     {
         completedOrders.put(co, quantityUsed);
+    }
+
+    public Map<CompletedOrder, Double> GetCompletedOrders()
+    {
+        return completedOrders;
     }
 
     @Override
@@ -50,22 +51,5 @@ public class LimitOrder extends Order implements Comparable<LimitOrder>
             return 1;
         else
             return 0;
-    }
-
-    public double GetFilledQuantityCost()
-    {
-        double total = 0;
-
-        for (Map.Entry<CompletedOrder, Double> entry : completedOrders.entrySet())
-        {
-            //If we are buying, we get the price of the sell order
-            if (orderType == OrderType.Buy)
-                total += entry.getValue() * entry.getKey().GetPrice();
-            //If we are selling, we get our posted sell price
-            else if (orderType == OrderType.Sell)
-                total += entry.getValue() * price;
-        }
-
-        return total;
     }
 }

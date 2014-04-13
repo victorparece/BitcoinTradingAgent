@@ -14,10 +14,14 @@ public class MarketSimulator
 {
     private ArrayList<CompletedOrder> completedOrders = new ArrayList<CompletedOrder>();
     private ArrayList<LimitOrder> openOrders = new ArrayList<LimitOrder>();
+    private DateTime startDateTime;
+    private DateTime endDateTime;
     private DateTime lastMarketUpdate;
 
     public MarketSimulator(String inputFile, DateTime startDateTime, DateTime endDateTime)
     {
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
         try
         {
             BufferedReader br = new BufferedReader(new FileReader(inputFile));
@@ -79,27 +83,27 @@ public class MarketSimulator
         return newLimitOrder;
     }
 
-    public CompletedOrder SubmitMarketOrder(DateTime currentDateTime, Order.OrderType orderType, double volume)
+    public CompletedOrder SubmitMarketOrder(DateTime currentDateTime, Order.OrderType orderType, double totalPrice)
     {
         int currentIndex = FindCurrentLocation(currentDateTime);
-        double totalCost = 0;
-        double openQuantity = volume;
+        double amountRemaining = totalPrice;
+        double volume = 0;
         double baselinePrice = completedOrders.get(currentIndex).GetPrice();
 
-        while (openQuantity > 0)
+        while (amountRemaining > 0)
         {
             CompletedOrder matchedOrder = completedOrders.get(currentIndex);
             if (matchedOrder.GetPrice() >= baselinePrice)
             {
-                if (openQuantity <= matchedOrder.GetVolume())
+                if (amountRemaining <= matchedOrder.GetVolume()*matchedOrder.GetPrice())
                 {
-                    totalCost += openQuantity * matchedOrder.GetPrice();
-                    openQuantity = 0;
+                    volume += amountRemaining / matchedOrder.GetPrice();
+                    amountRemaining = 0;
                 }
-                else if (openQuantity > matchedOrder.GetVolume())
+                else if (amountRemaining > matchedOrder.GetVolume()*matchedOrder.GetPrice())
                 {
-                    totalCost += matchedOrder.GetVolume() * matchedOrder.GetPrice();
-                    openQuantity -= matchedOrder.GetVolume();
+                    amountRemaining -= matchedOrder.GetVolume() * matchedOrder.GetPrice();
+                    volume += matchedOrder.GetVolume();
                     //TODO: Consider making market orders more expensive, by updating baseline
                     //baselinePrice = matchedOrder.GetPrice();
                 }
@@ -108,7 +112,9 @@ public class MarketSimulator
         }
 
         //Total cost of market order is averaged over volume
-        return new CompletedOrder(currentDateTime, orderType, totalCost/volume, volume);
+        CompletedOrder completedOrder = new CompletedOrder(currentDateTime, orderType, totalPrice/volume, volume);
+        completedOrder.UpdateRemainingQuantity(0.0);
+        return completedOrder;
     }
 
     public void UpdateMarketState(DateTime currentDateTime)
@@ -165,4 +171,15 @@ public class MarketSimulator
     {
         return completedOrders.get(FindCurrentLocation(currentDateTime)).GetPrice();
     }
+
+    public DateTime GetStartDateTime()
+    {
+        return startDateTime;
+    }
+
+    public DateTime GetEndDateTime()
+    {
+        return endDateTime;
+    }
+
 }
